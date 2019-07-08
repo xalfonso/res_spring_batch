@@ -1,0 +1,9 @@
+plugins {
+    id 'java'
+}
+sourceCompatibility = 1.8
+
+dependencies {
+    compileOnly 'org.projectlombok:lombok'
+    testImplementation group: 'junit', name: 'junit'
+}

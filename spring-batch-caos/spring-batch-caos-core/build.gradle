@@ -1,0 +1,11 @@
+plugins {
+    id 'java'
+}
+sourceCompatibility = 1.8
+
+dependencies {
+    compile project(":spring-batch-caos-client")
+    compileOnly 'org.projectlombok:lombok'
+    implementation 'org.springframework.boot:spring-boot-starter-batch'
+    testImplementation group: 'junit', name: 'junit'
+}

@@ -1,0 +1,3 @@
+include 'spring-batch-caos-client'
+include 'spring-batch-caos-core'
+include 'spring-batch-services'
