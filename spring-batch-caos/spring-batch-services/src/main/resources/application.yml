@@ -1,0 +1,5 @@
+#Property for avoid run the job on startup
+spring:
+  batch:
+    job:
+      enabled: false
