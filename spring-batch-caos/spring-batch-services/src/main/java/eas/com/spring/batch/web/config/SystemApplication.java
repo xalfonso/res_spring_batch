@@ -3,6 +3,7 @@ package eas.com.spring.batch.web.config;
 import eas.com.spring.batch.config.BatchConfiguration;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Import;
 
 /**
@@ -11,6 +12,7 @@ import org.springframework.context.annotation.Import;
  * @author Eduardo Alfonso Sanchez
  * @since 1.0.0
  */
+@ComponentScan("eas.com.spring.batch.web.controller")
 @Import({BatchConfiguration.class})
 @SpringBootApplication
 public class SystemApplication {
