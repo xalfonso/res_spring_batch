@@ -18,9 +18,9 @@ public class MigrationDocumentXmlController {
     private MigrationDocumentXmlService migrationDocumentXmlService;
 
 
-    @GetMapping("run/{year}")
-    public Mono<ResponseEntity> run(@PathVariable String year) throws Exception {
-        migrationDocumentXmlService.run(year);
+    @GetMapping("run/{year}/{truncateDestinationTable}")
+    public Mono<ResponseEntity> run(@PathVariable String year, @PathVariable Boolean truncateDestinationTable) throws Exception {
+        migrationDocumentXmlService.run(year, truncateDestinationTable);
         return Mono.empty();
     }
 }

@@ -3,20 +3,24 @@ package eas.com.batch.document;
 import eas.com.batch.SimpleMeasureTime;
 import eas.com.model.Issue;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.batch.core.*;
+import org.springframework.batch.core.Job;
+import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.JobBuilderFactory;
 import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.core.launch.support.RunIdIncrementer;
+import org.springframework.batch.core.step.tasklet.Tasklet;
 import org.springframework.batch.item.ItemProcessor;
 import org.springframework.batch.item.database.BeanPropertyItemSqlParameterSourceProvider;
 import org.springframework.batch.item.database.JdbcBatchItemWriter;
 import org.springframework.batch.item.database.JdbcCursorItemReader;
 import org.springframework.batch.item.database.builder.JdbcBatchItemWriterBuilder;
+import org.springframework.batch.repeat.RepeatStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.jdbc.core.JdbcTemplate;
 
 import javax.sql.DataSource;
 
@@ -65,6 +69,29 @@ public class MigrationDocumentXmlJobConfig {
         };
     }
 
+
+    @StepScope
+    @Bean
+    public Tasklet truncateDestinationTable(DataSource dataSource, @Value("#{jobParameters['year']}") String year, @Value("#{jobParameters['truncateDestinationTable']}") String truncateDestinationTable) {
+        return (contribution, chunkContext) -> {
+            if (Boolean.valueOf(truncateDestinationTable)) {
+                new JdbcTemplate(dataSource).execute("TRUNCATE issues" + year);
+                log.debug("The table was truncated");
+            } else {
+                log.debug("The table was not truncate");
+            }
+            return RepeatStatus.FINISHED;
+        };
+    }
+
+    @Bean
+    public Step truncateDestinationTableStep(Tasklet truncateDestinationTable) {
+        return stepBuilderFactory.get("truncateDestinationTableStep")
+                .tasklet(truncateDestinationTable)
+                .build();
+    }
+
+
     @StepScope
     @Bean
     public JdbcBatchItemWriter<Issue> writerIssueDb(DataSource dataSource, @Value("#{jobParameters['year']}") String year) {
@@ -75,9 +102,9 @@ public class MigrationDocumentXmlJobConfig {
                 .build();
     }
 
+
     @Bean
     public Step migrationIssueStep(JdbcCursorItemReader<Issue> reader, ItemProcessor<Issue, Issue> logIssuePersonProcessor, JdbcBatchItemWriter<Issue> writerIssueDb) {
-
         return stepBuilderFactory.get("migrationIssueStep")
                 .<Issue, Issue>chunk(2000)
                 .reader(reader)
@@ -88,33 +115,11 @@ public class MigrationDocumentXmlJobConfig {
 
 
     @Bean
-    public Job migrationIssueJob(Step migrationIssueStep) {
+    public Job migrationIssueJob(Step truncateDestinationTableStep, Step migrationIssueStep) {
         return jobBuilderFactory.get("migrationIssueJob")
                 .incrementer(new RunIdIncrementer())
-                .listener(new JobExecutionListener() {
-                    @Override
-                    public void beforeJob(JobExecution jobExecution) {
-                        log.info("The job with name: {} and id: {} parameters {} has begun at {}",
-                                jobExecution.getJobConfigurationName(), jobExecution.getId(), jobExecution.getJobParameters(),
-                                jobExecution.getStartTime());
-                    }
-
-                    @Override
-                    public void afterJob(JobExecution jobExecution) {
-                        if (jobExecution.getStatus() == BatchStatus.COMPLETED) {
-                            log.info("[SUCCEFULL COMPLETED JOB] The job with name: {} and id: {} parameters: {} has finished at: {} and duration time: {}",
-                                    jobExecution.getJobConfigurationName(), jobExecution.getId(), jobExecution.getJobParameters(),
-                                    jobExecution.getEndTime(), jobExecution.getEndTime().getTime() - jobExecution.getStartTime().getTime());
-                        } else {
-                            log.info("[NOT SUCCEFULL COMPLETED JOB] The job with name: {} and id: {} parameters: {} has finished at: {} with status: {} and duration time: {} and exceptions: ",
-                                    jobExecution.getJobConfigurationName(), jobExecution.getId(), jobExecution.getJobParameters(),
-                                    jobExecution.getEndTime(), jobExecution.getStatus(),
-                                    jobExecution.getEndTime().getTime() - jobExecution.getStartTime().getTime(), jobExecution.getAllFailureExceptions());
-                        }
-                    }
-                })
-                .flow(migrationIssueStep)
-                .end()
+                .start(truncateDestinationTableStep)
+                .next(migrationIssueStep)
                 .build();
     }
 
