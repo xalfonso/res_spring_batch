@@ -1,0 +1,12 @@
+spring:
+  datasource:
+    url: jdbc:mysql://localhost:3306/spring_batch?useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC
+    password: mysql
+    username: root
+  batch:
+    initialize-schema: always
+    job:
+      enabled: false
+logging:
+  level:
+    ROOT: info
