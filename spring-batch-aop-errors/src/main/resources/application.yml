@@ -1,0 +1,12 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:test_cache_app;DB_CLOSE_ON_EXIT=FALSE;MODE=DB2
+    password: SA
+    username:
+  batch:
+    initialize-schema: always
+    job:
+      enabled: false
+logging:
+  level:
+    ROOT: info
