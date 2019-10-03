@@ -6,3 +6,5 @@ springBootVersion = '2.1.6.RELEASE'
 <h3>spring-batch-nix</h3> Example of spring batch with one Job that has one Step that read from mysql table a write to mysql table
 <h4>Dependencies</h4>
 springBootVersion = '2.1.6.RELEASE'
+
+<h3>spring-batch-pause-stop-job</h3> Example of bath configuration that read and write in on list on memory. This example was created for test pause, stop operations over jobs
